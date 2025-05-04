@@ -1,133 +1,127 @@
-# Go-Vue 课程管理系统
+# Go-Vue-Admin
 
-## 项目概述
+一个基于 Go + Vue3 的课程管理系统，提供课程管理、选课、成绩管理等功能。
 
-这是一个基于 Go 和 Vue 3 开发的现代化课程管理系统，采用前后端分离架构。系统提供了完整的课程管理、用户管理和选课功能，适用于教育机构的在线课程管理需求。
+## 功能特点
+
+### 用户管理
+- 多角色支持（学生、教师、管理员）
+- 用户认证与授权
+- 个人信息管理
+
+### 课程管理
+- 课程创建与编辑
+- 课程状态管理（开放/关闭）
+- 课程容量控制
+- 课程列表查看与搜索
+
+### 选课系统
+- 学生选课功能
+- 课程容量限制
+- 选课状态追踪
+- 已选课程管理
+
+### 成绩管理
+- 教师成绩录入
+- 成绩统计分析
+  - 课程成绩统计（平均分、最高分、及格率等）
+  - 学生成绩统计（GPA、学分统计等）
+- 成绩分布可视化
+- 成绩历史记录
 
 ## 技术栈
 
-### 前端技术栈
-- Vue 3 + TypeScript
-- Vue Router
-- Pinia 状态管理
-- Element Plus UI 框架
-- Vite 构建工具
-- Axios HTTP 客户端
+### 后端
+- Go
+- Gin Web Framework
+- GORM
+- JWT Authentication
+- MySQL
 
-### 后端技术栈
-- Go 1.20+
-- Gin Web 框架
-- GORM ORM 框架
-- MySQL 数据库
-- Redis 缓存
-- JWT 认证
+### 前端
+- Vue 3
+- Vue Router
+- Pinia
+- Element Plus
+- ECharts
+- Axios
 
 ## 项目结构
 
 ```
 .
-├── frontend/           # 前端项目目录
-│   ├── src/           # 源代码
-│   │   ├── api/       # API 接口
-│   │   ├── components/# 组件
-│   │   ├── composables/# 组合式函数
-│   │   ├── constants/ # 常量定义
-│   │   ├── layouts/   # 布局组件
-│   │   └── styles/    # 样式文件
-│   └── FEATURES.md    # 前端功能文档
-│
-├── backend/           # 后端项目目录
-│   ├── config/       # 配置文件
-│   ├── controllers/  # 控制器
-│   ├── middleware/   # 中间件
-│   ├── models/       # 数据模型
-│   ├── routes/       # 路由定义
-│   ├── utils/        # 工具函数
-│   └── FEATURES.md   # 后端功能文档
-│
-├── config/           # 项目配置
-└── resource/         # 资源文件
+├── api/            # API 接口定义
+│   └── v1/         # V1 版本接口
+├── cmd/            # 主程序入口
+├── configs/        # 配置文件
+├── internal/       # 内部包
+│   ├── handler/    # 请求处理器
+│   ├── middleware/ # 中间件
+│   ├── model/      # 数据模型
+│   ├── repository/ # 数据访问层
+│   └── service/    # 业务逻辑层
+├── pkg/            # 公共包
+│   ├── auth/       # 认证相关
+│   ├── database/   # 数据库工具
+│   └── utils/      # 工具函数
+└── frontend/       # 前端项目
+    ├── src/
+    │   ├── api/        # API 调用
+    │   ├── assets/     # 静态资源
+    │   ├── components/ # 组件
+    │   ├── composables/# 组合式函数
+    │   ├── constants/  # 常量定义
+    │   ├── router/     # 路由配置
+    │   ├── stores/     # 状态管理
+    │   ├── utils/      # 工具函数
+    │   └── views/      # 页面视图
+    └── public/         # 公共静态资源
 ```
 
-## 核心功能
+## 开发环境要求
 
-### 用户管理
-- 用户注册与登录
-- 角色权限管理
-- 个人信息管理
+- Go 1.16+
+- Node.js 14+
+- MySQL 5.7+
 
-### 课程管理
-- 课程信息维护
-- 课程分类管理
-- 课程资源管理
+## 快速开始
 
-### 选课系统
-- 学生选课
-- 课程查询
-- 成绩管理
-
-### 系统功能
-- 权限控制
-- 数据缓存
-- 日志记录
-
-## 项目特点
-
-1. **前后端分离**: 采用现代化的前后端分离架构，提供更好的开发体验和维护性。
-2. **响应式设计**: 支持多端适配，提供良好的用户体验。
-3. **模块化结构**: 清晰的项目结构，便于功能扩展和维护。
-4. **安全性**: 实现了完整的认证和授权机制。
-5. **性能优化**: 采用缓存策略，提高系统响应速度。
-6. **规范化**: 统一的编码规范和文档规范。
-
-## 开发规范
-
-### 代码规范
-- 遵循 Go 官方代码规范
-- 使用 ESLint + Prettier 进行前端代码格式化
-- 统一的命名规范和注释规范
-
-### Git 提交规范
-- feat: 新功能
-- fix: 修复问题
-- docs: 文档变更
-- style: 代码格式
-- refactor: 代码重构
-- test: 测试相关
-- chore: 构建过程或辅助工具的变动
-
-## 部署说明
-
-### 环境要求
-- Node.js 16+
-- Go 1.20+
-- MySQL 8.0+
-- Redis 6.0+
-
-### 开发环境搭建
 1. 克隆项目
+```bash
+git clone https://github.com/yourusername/go-vue-admin.git
+cd go-vue-admin
+```
+
 2. 安装依赖
-3. 配置环境变量
-4. 启动开发服务器
+```bash
+# 后端依赖
+go mod download
 
-### 生产环境部署
-1. 前端构建
-2. 后端编译
-3. 数据库初始化
-4. 服务器配置
-5. 启动服务
+# 前端依赖
+cd frontend
+npm install
+```
 
-## 文档索引
+3. 配置数据库
+- 创建 MySQL 数据库
+- 修改 `configs/config.ini` 中的数据库配置
 
-- [前端功能文档](frontend/FEATURES.md)
-- [后端功能文档](backend/FEATURES.md)
+4. 运行项目
+```bash
+# 后端（在项目根目录下）
+go run cmd/main.go
+
+# 前端（在 frontend 目录下）
+npm run dev
+```
+
+5. 访问系统
+- 前端开发服务器：http://localhost:5173
+- 后端 API 服务器：http://localhost:8080
 
 ## 贡献指南
 
-1. Fork 项目
-2. 创建功能分支
-3. 提交变更
-4. 发起 Pull Request
+欢迎提交 Issue 和 Pull Request。
 
 ## 许可证
 

@@ -1,306 +1,188 @@
-# 后端功能实现文档
+# 后端技术文档
 
-## 项目结构
+## 架构设计
 
+### 目录结构
 ```
-backend/
-├── config/         # 配置文件
-├── controllers/    # 控制器
-├── middleware/     # 中间件
-├── models/         # 数据模型
-├── routes/         # 路由定义
-├── services/       # 业务逻辑
-├── utils/          # 工具函数
-└── main.go         # 入口文件
+.
+├── api/            # API 接口定义
+│   └── v1/         # V1 版本接口
+├── cmd/            # 主程序入口
+│   └── main.go     # 主程序
+├── configs/        # 配置文件
+│   ├── config.go   # 配置加载
+│   └── config.ini  # 配置文件
+├── internal/       # 内部包
+│   ├── handler/    # 请求处理器
+│   ├── middleware/ # 中间件
+│   ├── model/      # 数据模型
+│   ├── repository/ # 数据访问层
+│   └── service/    # 业务逻辑层
+├── pkg/            # 公共包
+│   ├── auth/       # 认证相关
+│   ├── database/   # 数据库工具
+│   └── utils/      # 工具函数
+└── resource/       # 资源文件
 ```
 
-## 技术栈
+### 分层架构
+- Handler Layer: 请求处理和参数验证
+- Service Layer: 业务逻辑实现
+- Repository Layer: 数据访问和持久化
+- Model Layer: 数据模型定义
 
-- Go 1.20+
-- Gin Web 框架
-- GORM ORM 框架
-- MySQL 数据库
-- Redis 缓存
+## 核心功能实现
+
+### 用户管理
+- 用户注册与登录
 - JWT 认证
-- Air 热重载
+- 角色权限控制
+- 用户信息管理
 
-## 数据库设计
+### 课程管理
+- 课程 CRUD 操作
+- 课程状态管理
+- 课程容量控制
+- 课程查询和筛选
 
-### 1. 用户表 (users)
-```sql
-CREATE TABLE users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    role ENUM('admin', 'teacher', 'student') NOT NULL,
-    status TINYINT NOT NULL DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
-);
-```
+### 选课系统
+- 选课操作
+- 退课操作
+- 选课状态管理
+- 选课记录查询
 
-### 2. 课程表 (courses)
-```sql
-CREATE TABLE courses (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    teacher_id BIGINT UNSIGNED NOT NULL,
-    credits DECIMAL(3,1) NOT NULL,
-    capacity INT NOT NULL,
-    current_enrolled INT NOT NULL DEFAULT 0,
-    status ENUM('open', 'closed') NOT NULL DEFAULT 'open',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
-);
-```
+### 成绩管理
+- 成绩录入与修改
+- 成绩统计分析
+  - 课程维度统计
+  - 学生维度统计
+- 成绩历史记录
+- GPA 计算
 
-### 3. 选课记录表 (enrollments)
-```sql
-CREATE TABLE enrollments (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    student_id BIGINT UNSIGNED NOT NULL,
-    course_id BIGINT UNSIGNED NOT NULL,
-    status ENUM('active', 'dropped', 'completed') NOT NULL DEFAULT 'active',
-    grade DECIMAL(5,2) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
-);
-```
+## 数据模型
 
-## API 接口设计
-
-### 1. 认证接口
-
-#### 1.1 用户登录
-- 路径: POST /api/v1/auth/login
-- 参数:
-  - username: string
-  - password: string
-- 返回:
-  - token: string
-  - user: object
-
-#### 1.2 用户注册
-- 路径: POST /api/v1/auth/register
-- 参数:
-  - username: string
-  - password: string
-  - email: string
-  - role: string
-- 返回:
-  - message: string
-  - user: object
-
-### 2. 用户接口
-
-#### 2.1 获取用户信息
-- 路径: GET /api/v1/users/:id
-- 权限: 认证用户
-- 返回: user object
-
-#### 2.2 更新用户信息
-- 路径: PUT /api/v1/users/:id
-- 权限: 用户本人或管理员
-- 参数: 用户信息对象
-- 返回: 更新后的用户信息
-
-### 3. 课程接口
-
-#### 3.1 课程列表
-- 路径: GET /api/v1/courses
-- 参数:
-  - page: int
-  - size: int
-  - search: string
-  - status: string
-- 返回: 课程列表和分页信息
-
-#### 3.2 课程详情
-- 路径: GET /api/v1/courses/:id
-- 返回: 课程详细信息
-
-#### 3.3 创建课程
-- 路径: POST /api/v1/courses
-- 权限: 教师或管理员
-- 参数: 课程信息对象
-- 返回: 创建的课程信息
-
-### 4. 选课接口
-
-#### 4.1 选课
-- 路径: POST /api/v1/enrollments
-- 权限: 学生
-- 参数:
-  - course_id: int
-- 返回: 选课结果
-
-#### 4.2 退课
-- 路径: DELETE /api/v1/enrollments/:id
-- 权限: 学生
-- 返回: 退课结果
-
-## 中间件实现
-
-### 1. 认证中间件
+### User 模型
 ```go
-func AuthMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        // JWT 认证逻辑
-        // 用户信息验证
-        // 权限检查
-    }
+type User struct {
+    ID        uint      `gorm:"primarykey"`
+    Username  string    `gorm:"unique;not null"`
+    Password  string    `gorm:"not null"`
+    Role      string    `gorm:"not null"`
+    CreatedAt time.Time
+    UpdatedAt time.Time
 }
 ```
 
-### 2. 角色中间件
+### Course 模型
 ```go
-func RoleMiddleware(roles ...string) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        // 角色验证逻辑
-        // 权限控制
-    }
+type Course struct {
+    ID              uint      `gorm:"primarykey"`
+    Name            string    `gorm:"not null"`
+    Description     string
+    Credits         float32   `gorm:"not null"`
+    Capacity        int       `gorm:"not null"`
+    CurrentEnrolled int       `gorm:"not null;default:0"`
+    Status          string    `gorm:"not null;default:'open'"`
+    TeacherID       uint      `gorm:"not null"`
+    CreatedAt       time.Time
+    UpdatedAt       time.Time
 }
 ```
 
-### 3. 日志中间件
+### Enrollment 模型
 ```go
-func LoggerMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        // 请求日志记录
-        // 响应时间统计
-        // 错误日志记录
-    }
+type Enrollment struct {
+    ID        uint      `gorm:"primarykey"`
+    StudentID uint      `gorm:"not null"`
+    CourseID  uint      `gorm:"not null"`
+    Status    string    `gorm:"not null;default:'active'"`
+    Grade     float32
+    CreatedAt time.Time
+    UpdatedAt time.Time
 }
 ```
 
-## 业务逻辑实现
-
-### 1. 用户服务
+### Grade 模型
 ```go
-type UserService interface {
-    Create(user *models.User) error
-    Update(user *models.User) error
-    Delete(id uint) error
-    FindByID(id uint) (*models.User, error)
-    FindByUsername(username string) (*models.User, error)
+type Grade struct {
+    ID         uint      `gorm:"primarykey"`
+    StudentID  uint      `gorm:"not null"`
+    CourseID   uint      `gorm:"not null"`
+    Score      float32   `gorm:"not null"`
+    Comment    string
+    CreatedAt  time.Time
+    UpdatedAt  time.Time
+    ModifiedBy uint      `gorm:"not null"`
 }
 ```
 
-### 2. 课程服务
+### GradeHistory 模型
 ```go
-type CourseService interface {
-    Create(course *models.Course) error
-    Update(course *models.Course) error
-    Delete(id uint) error
-    FindByID(id uint) (*models.Course, error)
-    List(params *ListParams) ([]*models.Course, int64, error)
+type GradeHistory struct {
+    ID         uint      `gorm:"primarykey"`
+    GradeID    uint      `gorm:"not null"`
+    OldScore   float32   `gorm:"not null"`
+    NewScore   float32   `gorm:"not null"`
+    Comment    string
+    ModifiedBy uint      `gorm:"not null"`
+    CreatedAt  time.Time
 }
 ```
 
-### 3. 选课服务
-```go
-type EnrollmentService interface {
-    Enroll(studentID, courseID uint) error
-    Drop(enrollmentID uint) error
-    UpdateGrade(enrollmentID uint, grade float64) error
-    ListByStudent(studentID uint) ([]*models.Enrollment, error)
-    ListByCourse(courseID uint) ([]*models.Enrollment, error)
-}
-```
+## API 接口
 
-## 缓存策略
+### 用户相关
+- POST /api/v1/auth/register - 用户注册
+- POST /api/v1/auth/login - 用户登录
+- GET /api/v1/users/me - 获取当前用户信息
+- PUT /api/v1/users/me - 更新用户信息
 
-### 1. Redis 缓存
-- 热门课程缓存
-- 用户信息缓存
-- 选课记录缓存
-- 课程统计信息缓存
+### 课程相关
+- GET /api/v1/courses - 获取课程列表
+- POST /api/v1/courses - 创建课程
+- PUT /api/v1/courses/:id - 更新课程
+- DELETE /api/v1/courses/:id - 删除课程
+- PUT /api/v1/courses/:id/status - 更新课程状态
 
-### 2. 缓存更新策略
-- 定时更新
-- 写入时更新
-- 过期时间设置
-- 缓存预热
+### 选课相关
+- POST /api/v1/courses/:id/enroll - 选课
+- POST /api/v1/courses/:id/drop - 退课
+- GET /api/v1/courses/enrolled - 获取已选课程
 
-## 安全措施
+### 成绩相关
+- GET /api/v1/grades - 获取成绩列表
+- POST /api/v1/grades - 录入成绩
+- PUT /api/v1/grades/:id - 修改成绩
+- GET /api/v1/grades/:id/history - 获取成绩历史
+- GET /api/v1/grades/stats/course/:id - 获取课程成绩统计
+- GET /api/v1/grades/stats/student/:id - 获取学生成绩统计
 
-### 1. 密码安全
-- bcrypt 加密
-- 密码强度验证
-- 登录失败限制
-- 密码重置机制
+## 中间件
 
-### 2. 数据安全
-- SQL 注入防护
-- XSS 防护
-- CSRF 防护
-- 输入验证
+### 认证中间件
+- JWT 令牌验证
+- 用户身份解析
+- 权限检查
 
-### 3. 访问控制
-- JWT 认证
-- 角色权限
-- 资源访问控制
-- API 访问限制
+### 日志中间件
+- 请求日志记录
+- 错误日志记录
 
-## 部署配置
+### 错误处理中间件
+- 统一错误响应
+- 错误码管理
 
-### 1. 环境配置
-```ini
-[server]
-port = 8080
-mode = release
+## 工具函数
 
-[database]
-host = localhost
-port = 3306
-name = course_admin
-user = root
-password = root
+### 认证相关
+- JWT 生成与验证
+- 密码加密与验证
 
-[redis]
-host = localhost
-port = 6379
-password = 
-db = 0
+### 数据库工具
+- 数据库连接管理
+- 事务处理
 
-[jwt]
-secret = your_secret_key
-expire_hours = 24
-```
-
-### 2. 监控告警
-- 系统监控
-- 性能监控
-- 错误监控
-- 告警通知
-
-## 开发计划
-
-### 第一阶段：基础架构
-- [x] 项目初始化
-- [x] 数据库设计
-- [x] 基础框架搭建
-- [x] 中间件实现
-
-### 第二阶段：核心功能
-- [ ] 用户认证
-- [ ] 课程管理
-- [ ] 选课系统
-- [ ] 成绩管理
-
-### 第三阶段：功能优化
-- [ ] 缓存优化
-- [ ] 性能优化
-- [ ] 安全加固
-- [ ] 单元测试
-
-### 第四阶段：部署上线
-- [ ] 部署脚本
-- [ ] 监控配置
-- [ ] 日志系统
-- [ ] 性能测试 
+### 通用工具
+- 分页处理
+- 响应封装
+- 参数验证 

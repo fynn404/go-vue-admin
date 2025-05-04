@@ -8,8 +8,9 @@ import (
 	"github.com/gin-gonic/gin" // Web框架
 	"github.com/joho/godotenv" // 环境变量管理
 
-	v1 "go-vue-admin/api/v1" // 路由定义
-	config "go-vue-admin/configs"
+	v1 "github.com/fynn404/go-vue-admin/api/v1" // 路由定义
+	config "github.com/fynn404/go-vue-admin/configs"
+	controllers "github.com/fynn404/go-vue-admin/internal/handler"
 )
 
 // init 函数在main函数之前执行，用于初始化系统配置
@@ -40,7 +41,26 @@ func main() {
 	r := gin.Default()
 
 	// 配置CORS（跨域资源共享）中间件
-	r.Use(func(c *gin.Context) {
+	r.Use(corsMiddleware())
+
+	// 初始化处理器
+	h := controllers.NewHandler()
+
+	// 设置路由
+	// 包括API路由和静态文件服务
+	v1.SetupRoutes(r, h)
+
+	// 启动服务器
+	// 默认端口为8080
+	port := getEnv("SERVER_PORT", "8080")
+	if err := r.Run(":" + port); err != nil {
+		log.Fatal("服务器启动失败:", err)
+	}
+}
+
+// corsMiddleware 创建CORS中间件
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		// 允许的源（域名）
 		c.Writer.Header().Set("Access-Control-Allow-Origin", getEnv("ALLOWED_ORIGINS", "*"))
 		// 允许携带凭证（cookies等）
@@ -57,17 +77,6 @@ func main() {
 		}
 
 		c.Next()
-	})
-
-	// 设置路由
-	// 包括API路由和静态文件服务
-	v1.SetupRoutes(r)
-
-	// 启动服务器
-	// 默认端口为8080
-	port := getEnv("SERVER_PORT", "8080")
-	if err := r.Run(":" + port); err != nil {
-		log.Fatal("服务器启动失败:", err)
 	}
 }
 
