@@ -1,11 +1,11 @@
-package routes
+package v1
 
 import (
 	"github.com/gin-gonic/gin"
 
-	"go-vue-admin/controllers"
-	"go-vue-admin/middleware"
-	"go-vue-admin/models"
+	controllers "go-vue-admin/internal/controller"
+	"go-vue-admin/internal/middleware"
+	models "go-vue-admin/internal/model"
 )
 
 // SetupRoutes configures all the routes for the application

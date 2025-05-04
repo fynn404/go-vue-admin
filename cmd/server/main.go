@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin" // Web框架
 	"github.com/joho/godotenv" // 环境变量管理
 
-	"go-vue-admin/config" // 项目配置
-	"go-vue-admin/routes" // 路由定义
+	v1 "go-vue-admin/api/v1" // 路由定义
+	config "go-vue-admin/configs"
 )
 
 // init 函数在main函数之前执行，用于初始化系统配置
@@ -61,7 +61,7 @@ func main() {
 
 	// 设置路由
 	// 包括API路由和静态文件服务
-	routes.SetupRoutes(r)
+	v1.SetupRoutes(r)
 
 	// 启动服务器
 	// 默认端口为8080
