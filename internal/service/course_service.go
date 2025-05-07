@@ -32,22 +32,22 @@ type CourseService interface {
 	ListAvailableCourses(ctx context.Context, page, pageSize int) ([]*models.Course, int64, error)
 }
 
-// courseService 实现 CourseService 接口
-type courseService struct {
+// CourseServiceImpl 实现 CourseService 接口
+type CourseServiceImpl struct {
 	courseRepo repository.CourseRepository
 	userRepo   repository.UserRepository
 }
 
 // NewCourseService 创建课程服务实例
 func NewCourseService(courseRepo repository.CourseRepository, userRepo repository.UserRepository) CourseService {
-	return &courseService{
+	return &CourseServiceImpl{
 		courseRepo: courseRepo,
 		userRepo:   userRepo,
 	}
 }
 
 // CreateCourse 实现创建课程
-func (s *courseService) CreateCourse(ctx context.Context, course *models.Course) error {
+func (s *CourseServiceImpl) CreateCourse(ctx context.Context, course *models.Course) error {
 	// 验证教师是否存在且角色正确
 	teacher, err := s.userRepo.FindByID(ctx, course.TeacherID)
 	if err != nil {
@@ -61,7 +61,7 @@ func (s *courseService) CreateCourse(ctx context.Context, course *models.Course)
 }
 
 // UpdateCourse 实现更新课程信息
-func (s *courseService) UpdateCourse(ctx context.Context, id uint, updates map[string]interface{}) error {
+func (s *CourseServiceImpl) UpdateCourse(ctx context.Context, id uint, updates map[string]interface{}) error {
 	course, err := s.courseRepo.FindByID(ctx, id)
 	if err != nil {
 		return ErrCourseNotFound
@@ -75,7 +75,7 @@ func (s *courseService) UpdateCourse(ctx context.Context, id uint, updates map[s
 		case "description":
 			course.Description = value.(string)
 		case "credits":
-			course.Credits = value.(float32)
+			course.Credits = int(value.(float32))
 		case "capacity":
 			capacity := value.(int)
 			if capacity < course.CurrentEnrolled {
@@ -95,7 +95,7 @@ func (s *courseService) UpdateCourse(ctx context.Context, id uint, updates map[s
 }
 
 // DeleteCourse 实现删除课程
-func (s *courseService) DeleteCourse(ctx context.Context, id uint) error {
+func (s *CourseServiceImpl) DeleteCourse(ctx context.Context, id uint) error {
 	if _, err := s.courseRepo.FindByID(ctx, id); err != nil {
 		return ErrCourseNotFound
 	}
@@ -103,7 +103,7 @@ func (s *courseService) DeleteCourse(ctx context.Context, id uint) error {
 }
 
 // GetCourseByID 实现根据ID获取课程信息
-func (s *courseService) GetCourseByID(ctx context.Context, id uint) (*models.Course, error) {
+func (s *CourseServiceImpl) GetCourseByID(ctx context.Context, id uint) (*models.Course, error) {
 	course, err := s.courseRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, ErrCourseNotFound
@@ -112,13 +112,13 @@ func (s *courseService) GetCourseByID(ctx context.Context, id uint) (*models.Cou
 }
 
 // ListCourses 实现获取课程列表
-func (s *courseService) ListCourses(ctx context.Context, page, pageSize int) ([]*models.Course, int64, error) {
+func (s *CourseServiceImpl) ListCourses(ctx context.Context, page, pageSize int) ([]*models.Course, int64, error) {
 	offset := (page - 1) * pageSize
 	return s.courseRepo.List(ctx, offset, pageSize)
 }
 
 // ListTeacherCourses 实现获取教师的课程列表
-func (s *courseService) ListTeacherCourses(ctx context.Context, teacherID uint, page, pageSize int) ([]*models.Course, int64, error) {
+func (s *CourseServiceImpl) ListTeacherCourses(ctx context.Context, teacherID uint, page, pageSize int) ([]*models.Course, int64, error) {
 	// 验证教师是否存在
 	teacher, err := s.userRepo.FindByID(ctx, teacherID)
 	if err != nil {
@@ -133,7 +133,7 @@ func (s *courseService) ListTeacherCourses(ctx context.Context, teacherID uint, 
 }
 
 // ListAvailableCourses 实现获取可选课程列表
-func (s *courseService) ListAvailableCourses(ctx context.Context, page, pageSize int) ([]*models.Course, int64, error) {
+func (s *CourseServiceImpl) ListAvailableCourses(ctx context.Context, page, pageSize int) ([]*models.Course, int64, error) {
 	offset := (page - 1) * pageSize
 	return s.courseRepo.ListAvailable(ctx, offset, pageSize)
 }

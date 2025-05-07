@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"go-vue-admin/models"
+	"github.com/fynn404/go-vue-admin/internal/model"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -19,7 +19,7 @@ type Claims struct {
 }
 
 // GenerateToken generates a new JWT token for a user
-func GenerateToken(user *models.User) (string, error) {
+func GenerateToken(user *model.User) (string, error) {
 	// Get token expiration from env
 	expHours, _ := strconv.Atoi(os.Getenv("JWT_EXPIRE_HOURS"))
 	if expHours == 0 {

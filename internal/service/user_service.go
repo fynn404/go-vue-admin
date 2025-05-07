@@ -30,18 +30,18 @@ type UserService interface {
 	ListUsers(ctx context.Context, page, pageSize int) ([]*models.User, int64, error)
 }
 
-// userService 实现 UserService 接口
-type userService struct {
+// UserServiceImpl 实现 UserService 接口
+type UserServiceImpl struct {
 	userRepo repository.UserRepository
 }
 
 // NewUserService 创建用户服务实例
 func NewUserService(userRepo repository.UserRepository) UserService {
-	return &userService{userRepo: userRepo}
+	return &UserServiceImpl{userRepo: userRepo}
 }
 
 // Register 实现用户注册
-func (s *userService) Register(ctx context.Context, username, password string, role models.Role) (*models.User, error) {
+func (s *UserServiceImpl) Register(ctx context.Context, username, password string, role models.Role) (*models.User, error) {
 	// 检查用户是否已存在
 	existingUser, err := s.userRepo.FindByUsername(ctx, username)
 	if err == nil && existingUser != nil {
@@ -65,7 +65,7 @@ func (s *userService) Register(ctx context.Context, username, password string, r
 }
 
 // Login 实现用户登录
-func (s *userService) Login(ctx context.Context, username, password string) (*models.User, error) {
+func (s *UserServiceImpl) Login(ctx context.Context, username, password string) (*models.User, error) {
 	user, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return nil, ErrUserNotFound
@@ -81,7 +81,7 @@ func (s *userService) Login(ctx context.Context, username, password string) (*mo
 }
 
 // UpdateUser 实现更新用户信息
-func (s *userService) UpdateUser(ctx context.Context, id uint, updates map[string]interface{}) error {
+func (s *UserServiceImpl) UpdateUser(ctx context.Context, id uint, updates map[string]interface{}) error {
 	user, err := s.userRepo.FindByID(ctx, id)
 	if err != nil {
 		return ErrUserNotFound
@@ -107,7 +107,7 @@ func (s *userService) UpdateUser(ctx context.Context, id uint, updates map[strin
 }
 
 // DeleteUser 实现删除用户
-func (s *userService) DeleteUser(ctx context.Context, id uint) error {
+func (s *UserServiceImpl) DeleteUser(ctx context.Context, id uint) error {
 	if _, err := s.userRepo.FindByID(ctx, id); err != nil {
 		return ErrUserNotFound
 	}
@@ -115,7 +115,7 @@ func (s *userService) DeleteUser(ctx context.Context, id uint) error {
 }
 
 // GetUserByID 实现根据ID获取用户信息
-func (s *userService) GetUserByID(ctx context.Context, id uint) (*models.User, error) {
+func (s *UserServiceImpl) GetUserByID(ctx context.Context, id uint) (*models.User, error) {
 	user, err := s.userRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, ErrUserNotFound
@@ -125,7 +125,7 @@ func (s *userService) GetUserByID(ctx context.Context, id uint) (*models.User, e
 }
 
 // ListUsers 实现获取用户列表
-func (s *userService) ListUsers(ctx context.Context, page, pageSize int) ([]*models.User, int64, error) {
+func (s *UserServiceImpl) ListUsers(ctx context.Context, page, pageSize int) ([]*models.User, int64, error) {
 	offset := (page - 1) * pageSize
 	users, total, err := s.userRepo.List(ctx, offset, pageSize)
 	if err != nil {

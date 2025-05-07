@@ -1,78 +1,64 @@
-package models
+package model
 
 import (
-	"errors"
 	"time"
 
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
 
-type EnrollmentStatus string
-
-const (
-	EnrollmentStatusActive   EnrollmentStatus = "active"
-	EnrollmentStatusDropped  EnrollmentStatus = "dropped"
-	EnrollmentStatusComplete EnrollmentStatus = "complete"
-)
-
+// Enrollment 选课记录模型
 type Enrollment struct {
-	ID        uint             `json:"id" gorm:"primarykey"`
-	StudentID uint             `json:"student_id" gorm:"not null"`
-	Student   User             `json:"student" gorm:"foreignKey:StudentID"`
-	CourseID  uint             `json:"course_id" gorm:"not null"`
-	Course    Course           `json:"course" gorm:"foreignKey:CourseID"`
-	Status    EnrollmentStatus `json:"status" gorm:"type:varchar(10);not null;default:'active'"`
-	Grade     *float32         `json:"grade"`
-	CreatedAt time.Time        `json:"created_at"`
-	UpdatedAt time.Time        `json:"updated_at"`
-	DeletedAt gorm.DeletedAt   `json:"-" gorm:"index"`
+	gorm.Model
+	StudentID  uint             `gorm:"not null" json:"student_id"`
+	Student    User             `json:"student,omitempty"`
+	CourseID   uint             `gorm:"not null" json:"course_id"`
+	Course     Course           `json:"course,omitempty"`
+	Grade      *decimal.Decimal `gorm:"type:decimal(5,2)" json:"grade"`
+	Status     EnrollmentStatus `gorm:"not null;default:'enrolled'" json:"status"`
+	EnrolledAt time.Time        `json:"enrolled_at"`
+	DroppedAt  *time.Time       `json:"dropped_at,omitempty"`
 }
 
 // TableName - Set table name for GORM
 func (Enrollment) TableName() string {
-	return "enrollments"
+	return "enrollment_tab"
 }
 
-// BeforeCreate - GORM hook to validate enrollment before creation
+// BeforeCreate - GORM hook
 func (e *Enrollment) BeforeCreate(tx *gorm.DB) error {
-	var course Course
-	if err := tx.First(&course, e.CourseID).Error; err != nil {
-		return err
-	}
-
-	if !course.IsAvailable() {
-		return ErrCourseUnavailable
-	}
-
 	var count int64
 	if err := tx.Model(&Enrollment{}).
 		Where("student_id = ? AND course_id = ? AND status = ?",
-			e.StudentID, e.CourseID, EnrollmentStatusActive).
+			e.StudentID, e.CourseID, EnrollmentStatusEnrolled).
 		Count(&count).Error; err != nil {
 		return err
 	}
 
 	if count > 0 {
-		return ErrAlreadyEnrolled
+		return ErrDuplicateEnrollment
 	}
 
+	e.EnrolledAt = time.Now()
 	return nil
 }
 
-// UpdateGrade - Update the grade for an enrollment
-func (e *Enrollment) UpdateGrade(grade float32) error {
-	if grade < 0 || grade > 100 {
-		return errors.New("grade must be between 0 and 100")
+// UpdateGrade - 更新成绩
+func (e *Enrollment) UpdateGrade(grade decimal.Decimal) error {
+	if e.Status != EnrollmentStatusEnrolled {
+		return ErrInvalidEnrollmentStatus
 	}
 	e.Grade = &grade
 	return nil
 }
 
-// Drop - Drop the course
+// Drop - 退课
 func (e *Enrollment) Drop() error {
-	if e.Status != EnrollmentStatusActive {
-		return errors.New("can only drop active enrollments")
+	if e.Status != EnrollmentStatusEnrolled {
+		return ErrInvalidEnrollmentStatus
 	}
 	e.Status = EnrollmentStatusDropped
+	now := time.Now()
+	e.DroppedAt = &now
 	return nil
 }

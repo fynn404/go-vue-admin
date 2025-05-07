@@ -15,19 +15,23 @@ type RouteGroup interface {
 
 // Routes 路由分组结构体
 type Routes struct {
-	auth       *AuthRoutes
-	user       *UserRoutes
-	course     *CourseRoutes
-	enrollment *EnrollmentRoutes
+	auth         *AuthRoutes
+	user         *UserRoutes
+	course       *CourseRoutes
+	enrollment   *EnrollmentRoutes
+	grade        *GradeRoutes
+	gradeHistory *GradeHistoryRoutes
 }
 
 // NewRoutes 创建路由实例
 func NewRoutes(h *controllers.Handler) *Routes {
 	return &Routes{
-		auth:       NewAuthRoutes(h),
-		user:       NewUserRoutes(h),
-		course:     NewCourseRoutes(h),
-		enrollment: NewEnrollmentRoutes(h),
+		auth:         NewAuthRoutes(h),
+		user:         NewUserRoutes(h),
+		course:       NewCourseRoutes(h),
+		enrollment:   NewEnrollmentRoutes(h),
+		grade:        NewGradeRoutes(h),
+		gradeHistory: NewGradeHistoryRoutes(h),
 	}
 }
 
@@ -81,19 +85,25 @@ func (r *CourseRoutes) Register(group *gin.RouterGroup) {
 		courses.GET("", r.handler.Course.List)
 		courses.GET("/:id", r.handler.Course.Get)
 
-		// 教师路由
+		// 教师路由 - 使用细粒度权限控制
 		teacher := courses.Group("", middleware.RoleMiddleware(string(model.RoleTeacher)))
 		{
-			teacher.POST("", r.handler.Course.Create)
-			teacher.PUT("/:id", r.handler.Course.Update)
-			teacher.DELETE("/:id", r.handler.Course.Delete)
+			createCourse := teacher.Group("", middleware.PermissionMiddleware("manage_own_courses"))
+			{
+				createCourse.POST("", r.handler.Course.Create)
+				createCourse.PUT("/:id", middleware.ResourceOwnerMiddleware("course"), r.handler.Course.Update)
+				createCourse.DELETE("/:id", middleware.ResourceOwnerMiddleware("course"), r.handler.Course.Delete)
+			}
 		}
 
-		// 学生路由
+		// 学生路由 - 使用细粒度权限控制
 		student := courses.Group("", middleware.RoleMiddleware(string(model.RoleStudent)))
 		{
-			student.POST("/:id/enroll", r.handler.Course.Enroll)
-			student.POST("/:id/drop", r.handler.Course.Drop)
+			enrollCourse := student.Group("", middleware.PermissionMiddleware("enroll_courses"))
+			{
+				enrollCourse.POST("/:id/enroll", r.handler.Course.Enroll)
+				enrollCourse.POST("/:id/drop", r.handler.Course.Drop)
+			}
 		}
 	}
 }
@@ -112,19 +122,108 @@ func (r *EnrollmentRoutes) Register(group *gin.RouterGroup) {
 	{
 		enrollments.GET("", r.handler.Enrollment.List)
 
-		// 教师路由
+		// 教师路由 - 使用细粒度权限控制
 		teacher := enrollments.Group("", middleware.RoleMiddleware(string(model.RoleTeacher)))
 		{
-			teacher.PUT("/:id/grade", r.handler.Enrollment.UpdateGrade)
-			teacher.POST("/grades/batch", r.handler.Enrollment.BatchUpdateGrades)
-			teacher.GET("/courses/:id/stats", r.handler.Enrollment.GetCourseStats)
+			manageGrades := teacher.Group("", middleware.PermissionMiddleware("manage_grades"))
+			{
+				manageGrades.PUT("/:id/grade", middleware.ResourceOwnerMiddleware("course"), r.handler.Enrollment.UpdateGrade)
+				manageGrades.GET("/courses/:id/stats", middleware.ResourceOwnerMiddleware("course"), r.handler.Enrollment.GetCourseStats)
+			}
 		}
 
-		// 学生路由
+		// 学生路由 - 使用细粒度权限控制
 		student := enrollments.Group("", middleware.RoleMiddleware(string(model.RoleStudent)))
 		{
-			student.GET("/grades", r.handler.Enrollment.GetStudentGrades)
+			viewGrades := student.Group("", middleware.PermissionMiddleware("view_own_grades"))
+			{
+				viewGrades.GET("/grades", middleware.ResourceOwnerMiddleware("enrollment"), r.handler.Enrollment.GetStudentGrades)
+			}
 		}
+	}
+}
+
+// GradeRoutes 成绩相关路由
+type GradeRoutes struct {
+	handler *controllers.Handler
+}
+
+func NewGradeRoutes(h *controllers.Handler) *GradeRoutes {
+	return &GradeRoutes{handler: h}
+}
+
+func (r *GradeRoutes) Register(group *gin.RouterGroup) {
+	grades := group.Group("/grades", middleware.AuthMiddleware())
+	{
+		// 学生路由 - 使用细粒度权限控制
+		student := grades.Group("", middleware.RoleMiddleware(string(model.RoleStudent)))
+		{
+			viewGrades := student.Group("", middleware.PermissionMiddleware("view_own_grades"))
+			{
+				viewGrades.GET("/my", r.handler.Grade.GetStudentGrades)
+			}
+		}
+
+		// 教师路由 - 使用细粒度权限控制
+		teacher := grades.Group("", middleware.RoleMiddleware(string(model.RoleTeacher)))
+		{
+			manageGrades := teacher.Group("", middleware.PermissionMiddleware("manage_grades"))
+			{
+				manageGrades.POST("/courses/:course_id/students/:student_id", middleware.ResourceOwnerMiddleware("course"), r.handler.Grade.Create)
+				manageGrades.GET("/courses/:course_id", middleware.ResourceOwnerMiddleware("course"), r.handler.Grade.GetCourseGrades)
+				manageGrades.PUT("/:id", middleware.ResourceOwnerMiddleware("course"), r.handler.Grade.Update)
+				manageGrades.POST("/:id/publish", middleware.ResourceOwnerMiddleware("course"), r.handler.Grade.Publish)
+			}
+		}
+
+		// 通用路由（需要权限验证）
+		grades.GET("/:id/history", r.handler.Grade.GetGradeHistory)
+	}
+}
+
+// GradeHistoryRoutes 成绩历史记录相关路由
+type GradeHistoryRoutes struct {
+	handler *controllers.Handler
+}
+
+func NewGradeHistoryRoutes(h *controllers.Handler) *GradeHistoryRoutes {
+	return &GradeHistoryRoutes{handler: h}
+}
+
+func (r *GradeHistoryRoutes) Register(group *gin.RouterGroup) {
+	histories := group.Group("/grade-histories", middleware.AuthMiddleware())
+	{
+		// 学生路由 - 使用细粒度权限控制
+		student := histories.Group("", middleware.RoleMiddleware(string(model.RoleStudent)))
+		{
+			viewGrades := student.Group("", middleware.PermissionMiddleware("view_own_grades"))
+			{
+				viewGrades.GET("/my", r.handler.GradeHistoryHandler.GetHistoryByStudent)
+			}
+		}
+
+		// 教师路由 - 使用细粒度权限控制
+		teacher := histories.Group("", middleware.RoleMiddleware(string(model.RoleTeacher)))
+		{
+			manageGrades := teacher.Group("", middleware.PermissionMiddleware("manage_grades"))
+			{
+				manageGrades.GET("/courses/:course_id", middleware.ResourceOwnerMiddleware("course"), r.handler.GradeHistoryHandler.GetHistoryByCourse)
+				manageGrades.GET("/grades/:grade_id", middleware.ResourceOwnerMiddleware("course"), r.handler.GradeHistoryHandler.GetHistoryByGrade)
+				manageGrades.GET("/my-operations", r.handler.GradeHistoryHandler.GetHistoryByTeacher)
+			}
+		}
+
+		// 管理员路由 - 使用细粒度权限控制
+		admin := histories.Group("", middleware.RoleMiddleware(string(model.RoleAdmin)))
+		{
+			manageSystem := admin.Group("", middleware.PermissionMiddleware("manage_system"))
+			{
+				manageSystem.GET("/date-range", r.handler.GradeHistoryHandler.GetHistoryByDateRange)
+			}
+		}
+
+		// 通用路由（需要权限验证）
+		histories.GET("/:id", r.handler.GradeHistoryHandler.GetHistoryDetail)
 	}
 }
 
@@ -141,4 +240,6 @@ func SetupRoutes(r *gin.Engine, h *controllers.Handler) {
 	routes.user.Register(v1)
 	routes.course.Register(v1)
 	routes.enrollment.Register(v1)
+	routes.grade.Register(v1)
+	routes.gradeHistory.Register(v1)
 }
