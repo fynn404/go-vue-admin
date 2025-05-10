@@ -16,7 +16,8 @@ const (
 
 // Course 课程模型
 type Course struct {
-	gorm.Model
+	//gorm.Model
+	ID              uint         `gorm:"primaryKey;autoIncrement" json:"id"`
 	Name            string       `gorm:"not null" json:"name"`
 	Description     string       `json:"description"`
 	TeacherID       uint         `gorm:"not null" json:"teacher_id"`
@@ -27,7 +28,7 @@ type Course struct {
 	Status          CourseStatus `gorm:"not null" json:"status"`
 	Students        []User       `gorm:"many2many:enrollments;" json:"students,omitempty"`
 	CreatedAt       time.Time    `json:"created_at"`
-	UpdatedAt       time.Time    `json:"updated_at"`
+	UpdatedAt       time.Time    `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 // TableName - Set table name for GORM

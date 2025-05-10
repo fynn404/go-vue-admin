@@ -22,6 +22,15 @@ class APITester:
             'student': {'username': 'student_test', 'password': 'student123', 'role': 'student', 'name': 'Student User',
                         'email': 'student@test.com'}
         }
+        self.test_update_users = {
+            'admin': {'username': 'admin_test', 'password': 'admin123', 'role': 'admin', 'name': 'Admin User New',
+                      'email': 'admin_new@test.com'},
+            'teacher': {'username': 'teacher_test', 'password': 'teacher123', 'role': 'teacher', 'name': 'Teacher User New',
+                        'email': 'teacher_new@test.com'},
+            'student': {'username': 'student_test', 'password': 'student123', 'role': 'student',
+                        'name': 'Student User New',
+                        'email': 'student_new@test.com'}
+        }
         self.created_course_id = None
         self.enrollment_id = None
 
@@ -29,9 +38,15 @@ class APITester:
                      token: Optional[str] = None) -> requests.Response:
         url = f"{self.base_url}{endpoint}"
         headers = {'Content-Type': 'application/json'}
+        # Print the request details
+        print(f"\nRequest: {method} {url}")
+
+        if data:
+            print(f"Request: {json.dumps(data, indent=2)}")
+
         if token:
             headers['Authorization'] = f'Bearer {token}'
-
+        # print(f"Headers: {headers}")
         try:
             if method == 'GET':
                 response = requests.get(url, headers=headers)
@@ -46,7 +61,7 @@ class APITester:
 
             print(f"\n{method} {endpoint}")
             print(f"Status Code: {response.status_code}")
-            print(f"Response: {response.text[:200]}...")
+            print(f"Response: {response.text[:200]}")
             return response
         except requests.exceptions.RequestException as e:
             print(f"Error making request: {e}")
@@ -70,6 +85,14 @@ class APITester:
 
     def test_user_profile(self, user_type: str) -> bool:
         response = self.make_request('GET', '/users/profile', token=self.tokens[user_type])
+        return response and response.status_code == 200
+
+    def update_user_profile(self, user_type: str) -> bool:
+        user_data = {
+            'name': self.test_update_users[user_type]['name'],
+            'email': self.test_update_users[user_type]['email']
+        }
+        response = self.make_request('PUT', '/users/profile', data=user_data, token=self.tokens[user_type])
         return response and response.status_code == 200
 
     def test_course_operations(self) -> bool:
@@ -207,5 +230,11 @@ if __name__ == "__main__":
     # Create API tester instance
     tester = APITester()
 
+    user_type = 'student'
     # Run all tests
-    tester.register_user(user_type='admin')
+    tester.register_user(user_type)
+    # time.sleep(3)
+    tester.login_user(user_type)
+    # tester.test_user_profile(user_type='student')
+    tester.update_user_profile(user_type)
+    tester.login_user(user_type)

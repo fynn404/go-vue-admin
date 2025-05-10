@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/fynn404/go-vue-admin/internal/config"
 	"github.com/fynn404/go-vue-admin/internal/model"
 	"github.com/gin-gonic/gin"
 )
@@ -81,50 +80,6 @@ func PermissionMiddleware(permissions ...string) gin.HandlerFunc {
 
 		if !hasPermission {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Permission denied"})
-			c.Abort()
-			return
-		}
-
-		c.Next()
-	}
-}
-
-// ResourceOwnerMiddleware checks if the user owns the resource
-func ResourceOwnerMiddleware(resourceType string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userID, _ := c.Get("user_id")
-		userRole, _ := c.Get("role")
-		resourceID := c.Param("id")
-
-		// 管理员可以访问所有资源
-		if userRole == string(model.RoleAdmin) {
-			c.Next()
-			return
-		}
-
-		var isOwner bool
-		switch resourceType {
-		case "course":
-			var course model.Course
-			if err := config.DB.First(&course, resourceID).Error; err != nil {
-				c.JSON(http.StatusNotFound, gin.H{"error": "Resource not found"})
-				c.Abort()
-				return
-			}
-			isOwner = course.TeacherID == userID.(uint)
-
-		case "enrollment":
-			var enrollment model.Enrollment
-			if err := config.DB.First(&enrollment, resourceID).Error; err != nil {
-				c.JSON(http.StatusNotFound, gin.H{"error": "Resource not found"})
-				c.Abort()
-				return
-			}
-			isOwner = enrollment.StudentID == userID.(uint)
-		}
-
-		if !isOwner {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to access this resource"})
 			c.Abort()
 			return
 		}

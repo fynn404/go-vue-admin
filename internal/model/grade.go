@@ -62,5 +62,5 @@ func (g *Grade) BeforeSave(tx *gorm.DB) error {
 
 // TableName - Set table name for GORM
 func (g *Grade) TableName() string {
-	return "grade_tab"
+	return "grades_tab"
 }

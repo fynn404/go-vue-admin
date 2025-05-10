@@ -22,7 +22,7 @@ type Enrollment struct {
 
 // TableName - Set table name for GORM
 func (Enrollment) TableName() string {
-	return "enrollment_tab"
+	return "course_enrollment_tab"
 }
 
 // BeforeCreate - GORM hook

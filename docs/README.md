@@ -1,39 +1,41 @@
-# Go Vue Admin Documentation
+# Go-Vue-Admin 项目文档
 
-## Table of Contents
+欢迎使用 Go-Vue-Admin 项目文档。本文档提供了项目的完整指南，从开发环境搭建到生产环境部署的全流程说明。
 
-1. [Introduction](./introduction.md)
-2. [Getting Started](./getting-started.md)
-3. [Architecture](./architecture.md)
-4. [API Documentation](./api/README.md)
-5. [Frontend Documentation](./frontend/README.md)
-6. [Database Schema](./database/README.md)
-7. [Deployment Guide](./deployment/README.md)
+## 文档目录
 
-## Quick Start
+### 入门指南
+- [项目概述](./overview.md)
+- [快速开始](./quickstart.md)
+- [开发环境配置](./development/environment-setup.md)
 
-### Prerequisites
-- Go 1.21 or higher
-- Node.js 18 or higher
-- Docker (optional)
-- Make (optional)
+### 开发指南
+- [后端开发指南](./development/backend-guide.md)
+- [前端开发指南](./development/frontend-guide.md)
+- [API 文档](./development/api-docs.md)
+- [数据库设计](./development/database.md)
+- [代码规范](./development/coding-standards.md)
 
-### Development Setup
-1. Clone the repository
-2. Run `make frontend-install` to install frontend dependencies
-3. Run `make dev` to start both frontend and backend in development mode
+### 部署指南
+- [构建说明](./deployment/build.md)
+- [Docker 部署](./deployment/docker.md)
+- [生产环境配置](./deployment/production.md)
+- [Nginx 配置](./deployment/nginx.md)
 
-### Production Build
-1. Run `make build` to build the backend
-2. Run `make frontend-build` to build the frontend
-3. Run `make docker-build` to create a Docker image
+### 运维指南
+- [监控和日志](./maintenance/monitoring.md)
+- [备份和恢复](./maintenance/backup.md)
+- [故障排除](./maintenance/troubleshooting.md)
+- [性能优化](./maintenance/performance.md)
+- [安全指南](./maintenance/security.md)
 
-For detailed documentation, please refer to the respective sections above.
+### 其他
+- [更新日志](./changelog.md)
+- [贡献指南](./contributing.md)
+- [常见问题](./faq.md)
 
-## Contributing
+## 文档更新
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+本文档由开发团队维护，如发现问题或需要补充，请提交 Issue 或 Pull Request。
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details. 
+最后更新时间：2024-03-21 

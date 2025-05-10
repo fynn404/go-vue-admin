@@ -91,8 +91,8 @@ func (r *CourseRoutes) Register(group *gin.RouterGroup) {
 			createCourse := teacher.Group("", middleware.PermissionMiddleware("manage_own_courses"))
 			{
 				createCourse.POST("", r.handler.Course.Create)
-				createCourse.PUT("/:id", middleware.ResourceOwnerMiddleware("course"), r.handler.Course.Update)
-				createCourse.DELETE("/:id", middleware.ResourceOwnerMiddleware("course"), r.handler.Course.Delete)
+				createCourse.PUT("/:id", r.handler.Course.Update)
+				createCourse.DELETE("/:id", r.handler.Course.Delete)
 			}
 		}
 
@@ -127,8 +127,8 @@ func (r *EnrollmentRoutes) Register(group *gin.RouterGroup) {
 		{
 			manageGrades := teacher.Group("", middleware.PermissionMiddleware("manage_grades"))
 			{
-				manageGrades.PUT("/:id/grade", middleware.ResourceOwnerMiddleware("course"), r.handler.Enrollment.UpdateGrade)
-				manageGrades.GET("/courses/:id/stats", middleware.ResourceOwnerMiddleware("course"), r.handler.Enrollment.GetCourseStats)
+				manageGrades.PUT("/:id/grade", r.handler.Enrollment.UpdateGrade)
+				manageGrades.GET("/courses/:id/stats", r.handler.Enrollment.GetCourseStats)
 			}
 		}
 
@@ -137,7 +137,7 @@ func (r *EnrollmentRoutes) Register(group *gin.RouterGroup) {
 		{
 			viewGrades := student.Group("", middleware.PermissionMiddleware("view_own_grades"))
 			{
-				viewGrades.GET("/grades", middleware.ResourceOwnerMiddleware("enrollment"), r.handler.Enrollment.GetStudentGrades)
+				viewGrades.GET("/grades", r.handler.Enrollment.GetStudentGrades)
 			}
 		}
 	}
@@ -169,10 +169,10 @@ func (r *GradeRoutes) Register(group *gin.RouterGroup) {
 		{
 			manageGrades := teacher.Group("", middleware.PermissionMiddleware("manage_grades"))
 			{
-				manageGrades.POST("/courses/:course_id/students/:student_id", middleware.ResourceOwnerMiddleware("course"), r.handler.Grade.Create)
-				manageGrades.GET("/courses/:course_id", middleware.ResourceOwnerMiddleware("course"), r.handler.Grade.GetCourseGrades)
-				manageGrades.PUT("/:id", middleware.ResourceOwnerMiddleware("course"), r.handler.Grade.Update)
-				manageGrades.POST("/:id/publish", middleware.ResourceOwnerMiddleware("course"), r.handler.Grade.Publish)
+				manageGrades.POST("/courses/:course_id/students/:student_id", r.handler.Grade.Create)
+				manageGrades.GET("/courses/:course_id", r.handler.Grade.GetCourseGrades)
+				manageGrades.PUT("/:id", r.handler.Grade.Update)
+				manageGrades.POST("/:id/publish", r.handler.Grade.Publish)
 			}
 		}
 
@@ -207,8 +207,8 @@ func (r *GradeHistoryRoutes) Register(group *gin.RouterGroup) {
 		{
 			manageGrades := teacher.Group("", middleware.PermissionMiddleware("manage_grades"))
 			{
-				manageGrades.GET("/courses/:course_id", middleware.ResourceOwnerMiddleware("course"), r.handler.GradeHistoryHandler.GetHistoryByCourse)
-				manageGrades.GET("/grades/:grade_id", middleware.ResourceOwnerMiddleware("course"), r.handler.GradeHistoryHandler.GetHistoryByGrade)
+				manageGrades.GET("/courses/:course_id", r.handler.GradeHistoryHandler.GetHistoryByCourse)
+				manageGrades.GET("/grades/:grade_id", r.handler.GradeHistoryHandler.GetHistoryByGrade)
 				manageGrades.GET("/my-operations", r.handler.GradeHistoryHandler.GetHistoryByTeacher)
 			}
 		}

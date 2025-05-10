@@ -1,3 +1,8 @@
+-- 创建数据库（如果不存在）
+CREATE DATABASE IF NOT EXISTS course_management_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE course_management_db;
+
 -- 创建用户表
 CREATE TABLE IF NOT EXISTS users_tab (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -39,7 +44,7 @@ CREATE INDEX idx_courses_status ON courses_tab(status);
 CREATE INDEX idx_courses_deleted_at ON courses_tab(deleted_at);
 
 -- 创建成绩表
-CREATE TABLE IF NOT EXISTS grade_tab (
+CREATE TABLE IF NOT EXISTS grades_tab (
                                          id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                                          course_id BIGINT UNSIGNED NOT NULL,
                                          student_id BIGINT UNSIGNED NOT NULL,
@@ -76,7 +81,7 @@ CREATE TABLE IF NOT EXISTS grade_history_tab (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建选课记录表
-CREATE TABLE IF NOT EXISTS enrollment_tab (
+CREATE TABLE IF NOT EXISTS course_enrollment_tab (
                                               id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                                               student_id BIGINT UNSIGNED NOT NULL,
                                               course_id BIGINT UNSIGNED NOT NULL,
@@ -92,11 +97,11 @@ CREATE TABLE IF NOT EXISTS enrollment_tab (
 
 -- 创建索引
 -- 成绩表索引
-CREATE INDEX idx_grades_course_id ON grade_tab(course_id);
-CREATE INDEX idx_grades_student_id ON grade_tab(student_id);
-CREATE INDEX idx_grades_teacher_id ON grade_tab(teacher_id);
-CREATE INDEX idx_grades_status ON grade_tab(status);
-CREATE INDEX idx_grades_deleted_at ON grade_tab(deleted_at);
+CREATE INDEX idx_grades_course_id ON grades_tab(course_id);
+CREATE INDEX idx_grades_student_id ON grades_tab(student_id);
+CREATE INDEX idx_grades_teacher_id ON grades_tab(teacher_id);
+CREATE INDEX idx_grades_status ON grades_tab(status);
+CREATE INDEX idx_grades_deleted_at ON grades_tab(deleted_at);
 
 -- 成绩历史记录表索引
 CREATE INDEX idx_grade_histories_grade_id ON grade_history_tab(grade_id);
@@ -108,11 +113,11 @@ CREATE INDEX idx_grade_histories_operated_at ON grade_history_tab(operated_at);
 CREATE INDEX idx_grade_histories_deleted_at ON grade_history_tab(deleted_at);
 
 -- 选课记录表索引
-CREATE INDEX idx_enrollments_student_id ON enrollment_tab(student_id);
-CREATE INDEX idx_enrollments_course_id ON enrollment_tab(course_id);
-CREATE INDEX idx_enrollments_status ON enrollment_tab(status);
-CREATE INDEX idx_enrollments_deleted_at ON enrollment_tab(deleted_at);
+CREATE INDEX idx_enrollments_student_id ON course_enrollment_tab(student_id);
+CREATE INDEX idx_enrollments_course_id ON course_enrollment_tab(course_id);
+CREATE INDEX idx_enrollments_status ON course_enrollment_tab(status);
+CREATE INDEX idx_enrollments_deleted_at ON course_enrollment_tab(deleted_at);
 
 -- 创建唯一约束
-CREATE UNIQUE INDEX idx_enrollments_student_course ON enrollment_tab(student_id, course_id, status);
-CREATE UNIQUE INDEX idx_grades_student_course ON grade_tab(student_id, course_id);
+CREATE UNIQUE INDEX idx_enrollments_student_course ON course_enrollment_tab(student_id, course_id, status);
+CREATE UNIQUE INDEX idx_grades_student_course ON grades_tab(student_id, course_id);
